@@ -1,0 +1,9 @@
+//
+// Prefix header for all source files of the 'MIDIVis' target in the 'MIDIVis' project
+//
+
+#ifdef __OBJC__
+	#import <AudioToolbox/AudioToolbox.h>
+    #import <Cocoa/Cocoa.h>
+	#import <QuartzCore/QuartzCore.h>
+#endif
