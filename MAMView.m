@@ -21,6 +21,8 @@
 #define kNoteHeight 10.0f
 #define kNoteWidthPerSecond 40.0f
 
+#define kScrollerKey @"scroller"
+
 #pragma mark -
 #pragma mark UI
 
@@ -59,13 +61,11 @@
 	}
 }
 
-#define kScrollerKey @"scroller"
-
 - (void)startScrolling {
 	CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:@"sublayerTransform.translation.x"];
 	anim.byValue = [NSNumber numberWithFloat:-[_file beatsForSeconds:1.0f] * kNoteWidthPerSecond];
 	anim.duration = 1.0f;
-	anim.repeatCount = NSIntegerMax;
+	anim.repeatCount = 10000000.0f;
 	anim.cumulative = YES;
 	anim.additive = YES;
 	anim.fillMode = kCAFillModeForwards;

@@ -9,6 +9,7 @@
 
 @interface MIDIFile ()
 
+- (void)checkForEnd:(NSTimer *)timer;
 - (BOOL)hasNextEvent:(MusicEventIterator)iterator;
 - (MusicTimeStamp)getSequenceLength:(MusicSequence)sequence;
 
