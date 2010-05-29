@@ -9,9 +9,9 @@
 
 @interface MIDIDocument : NSDocument {
   @private
-	NSWindow *_docWindow;;
-	MAMView *_view;
-	MIDIFile *_file;
+	NSWindow *docWindow;
+	MAMView *view;
+	MIDIFile *file;
 }
 
 @property (nonatomic, assign) IBOutlet NSWindow *docWindow;

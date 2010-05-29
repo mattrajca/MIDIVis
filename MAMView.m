@@ -23,9 +23,6 @@
 
 #define kScrollerKey @"scroller"
 
-#pragma mark -
-#pragma mark UI
-
 - (void)awakeFromNib {
 	self.layer.backgroundColor = (CGColorRef) CFMakeCollectable(CGColorCreateGenericGray(0.0f, 1.0f));
 	
@@ -36,16 +33,13 @@
 	[self.superview.layer addSublayer:head];
 }
 
-#pragma mark -
-#pragma mark MIDI
-
-- (void)loadFile:(MIDIFile *)file {
-	if (_file)
+- (void)loadFile:(MIDIFile *)aFile {
+	if (file)
 		return;
 	
-	_file = file;
+	file = aFile;
 	
-	for (NSDictionary *note in [_file notes]) {
+	for (NSDictionary *note in [file notes]) {
 		float timestamp = [[note valueForKey:MIDINoteTimestampKey] floatValue];
 		int pitch = [[note valueForKey:MIDINotePitchKey] intValue] - 36; // cover only 4 octaves
 		float duration = [[note valueForKey:MIDINoteDurationKey] floatValue];
@@ -63,7 +57,7 @@
 
 - (void)startScrolling {
 	CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:@"sublayerTransform.translation.x"];
-	anim.byValue = [NSNumber numberWithFloat:-[_file beatsForSeconds:1.0f] * kNoteWidthPerSecond];
+	anim.byValue = [NSNumber numberWithFloat:-[file beatsForSeconds:1.0f] * kNoteWidthPerSecond];
 	anim.duration = 1.0f;
 	anim.repeatCount = 10000000.0f;
 	anim.cumulative = YES;
@@ -77,8 +71,6 @@
 - (void)stopScrolling {
 	[self.layer removeAnimationForKey:kScrollerKey];
 }
-
-#pragma mark -
 
 - (CGColorRef)colorForTrackAtIndex:(UInt32)index {
 	int rem = index % 3;
@@ -94,7 +86,5 @@
 	
 	return (CGColorRef) CFMakeCollectable(CGColorCreateGenericRGB(0.1f + rem * 0.4f, 1.0f / gVal, 1.0f / bVal, 1.0f));
 }
-
-#pragma mark -
 
 @end

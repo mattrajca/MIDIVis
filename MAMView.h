@@ -9,10 +9,10 @@
 
 @interface MAMView : NSView {
   @private
-	MIDIFile *_file;
+	MIDIFile *file;
 }
 
-- (void)loadFile:(MIDIFile *)file;
+- (void)loadFile:(MIDIFile *)aFile;
 
 - (void)startScrolling;
 - (void)stopScrolling;

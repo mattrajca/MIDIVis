@@ -12,10 +12,10 @@ extern NSString *const MIDINoteTrackIndexKey;
 
 @interface MIDIFile : NSObject {
   @private
-	MusicPlayer _player;
-	MusicSequence _sequence;
-	MusicTimeStamp _sequenceLength;
-	NSTimer *_checkTimer;
+	MusicPlayer player;
+	MusicSequence sequence;
+	MusicTimeStamp sequenceLength;
+	NSTimer *checkTimer;
 }
 
 @property (nonatomic, readonly) BOOL isPlaying;

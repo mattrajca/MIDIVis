@@ -9,19 +9,15 @@
 
 @implementation MIDIDocument
 
-@synthesize docWindow = _docWindow;
-@synthesize view = _view;
-
-#pragma mark -
-#pragma mark Document
+@synthesize docWindow, view;
 
 - (NSString *)windowNibName {
-    return @"MIDIDocument";
+	return @"MIDIDocument";
 }
 
 - (void)close {
-	[_file removeObserver:self forKeyPath:@"isPlaying"];
-	[_file stop];
+	[file removeObserver:self forKeyPath:@"isPlaying"];
+	[file stop];
 	
 	[super close];
 }
@@ -33,52 +29,44 @@
 }
 
 - (void)loadFile:(NSString *)fileName {
-	_file = [MIDIFile fileWithPath:fileName];
-	[_file addObserver:self forKeyPath:@"isPlaying" 
-			   options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld) context:NULL];
+	file = [MIDIFile fileWithPath:fileName];
+	[file addObserver:self forKeyPath:@"isPlaying" 
+			  options:(NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld) context:NULL];
 	
-	[_view loadFile:_file];
+	[view loadFile:file];
 	
-	[[_docWindow toolbar] validateVisibleItems];
+	[[docWindow toolbar] validateVisibleItems];
 }
 
-#pragma mark -
-#pragma mark Actions
-
 - (IBAction)play:(id)sender {
-	[_file play];
-	[_view startScrolling];
+	[file play];
+	[view startScrolling];
 }
 
 - (IBAction)stop:(id)sender {
-	[_view stopScrolling];
-	[_file stop];
+	[view stopScrolling];
+	[file stop];
 }
 
 - (BOOL)validateToolbarItem:(NSToolbarItem *)theItem {
 	if ([theItem action] == @selector(play:)) {
-		return !_file.isPlaying;
+		return !file.isPlaying;
 	}
 	else if ([theItem action] == @selector(stop:)) {
-		return _file.isPlaying;
+		return file.isPlaying;
 	}
 	
 	return NO;
 }
 
-#pragma mark -
-#pragma mark KVO
-
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change 
 					   context:(void *)context {
 	
-	[[_docWindow toolbar] validateVisibleItems];
+	[[docWindow toolbar] validateVisibleItems];
 	
-	if (!_file.isPlaying) {
+	if (!file.isPlaying) {
 		[self stop:nil];
 	}
 }
-
-#pragma mark -
 
 @end

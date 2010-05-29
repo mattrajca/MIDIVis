@@ -11,7 +11,7 @@
 
 - (void)checkForEnd:(NSTimer *)timer;
 - (BOOL)hasNextEvent:(MusicEventIterator)iterator;
-- (MusicTimeStamp)getSequenceLength:(MusicSequence)sequence;
+- (MusicTimeStamp)getSequenceLength:(MusicSequence)aSequence;
 
 @end
 
@@ -25,9 +25,6 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 
 @dynamic isPlaying;
 
-#pragma mark -
-#pragma mark Initialization
-
 + (id)fileWithPath:(NSString *)path {
 	return [[self alloc] initWithPath:path];
 }
@@ -37,21 +34,18 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 	if (self) {
 		NSURL *url = [NSURL fileURLWithPath:path];
 		
-		NewMusicSequence(&_sequence);
+		NewMusicSequence(&sequence);
 		
-		if (MusicSequenceFileLoad(_sequence, (CFURLRef) url, 0, 0) != noErr) {
+		if (MusicSequenceFileLoad(sequence, (CFURLRef) url, 0, 0) != noErr) {
 			return nil;
 		}
 	}
 	return self;
 }
 
-#pragma mark -
-#pragma mark MIDI
-
 - (MusicTimeStamp)beatsForSeconds:(Float64)seconds {
 	MusicTimeStamp beats = 0;
-	MusicSequenceGetBeatsForSeconds(_sequence, 1.0f, &beats);
+	MusicSequenceGetBeatsForSeconds(sequence, 1.0f, &beats);
 	
 	return beats;
 }
@@ -61,12 +55,12 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 	
 	UInt32 tracksCount = 0;
 	
-	if (MusicSequenceGetTrackCount(_sequence, &tracksCount) != noErr)
+	if (MusicSequenceGetTrackCount(sequence, &tracksCount) != noErr)
 		return nil;
 	
 	for (UInt32 i = 0; i < tracksCount; i++) {
 		MusicTrack track = NULL;
-		MusicSequenceGetIndTrack(_sequence, i, &track);
+		MusicSequenceGetIndTrack(sequence, i, &track);
 		
 		MusicEventIterator iterator = NULL;
 		NewMusicEventIterator(track, &iterator);
@@ -85,11 +79,11 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 				const MIDINoteMessage *noteMessage = (const MIDINoteMessage *)eventData;
 				
 				NSDictionary *note = [NSDictionary dictionaryWithObjectsAndKeys:
-									  [NSNumber numberWithFloat:timestamp], MIDINoteTimestampKey, 
+									  [NSNumber numberWithFloat:timestamp], MIDINoteTimestampKey,
 									  [NSNumber numberWithFloat:noteMessage->duration], MIDINoteDurationKey,
 									  [NSNumber numberWithShort:noteMessage->note], MIDINotePitchKey,
 									  [NSNumber numberWithInt:i], MIDINoteTrackIndexKey, nil];
-									  
+				
 				[notes addObject:note];
 			}
 		}
@@ -100,14 +94,12 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 	return notes;
 }
 
-#pragma mark -
-
 - (BOOL)play {
-	if (!_player) {
-		NewMusicPlayer(&_player);
+	if (!player) {
+		NewMusicPlayer(&player);
 		
-		MusicPlayerSetSequence(_player, _sequence);
-		MusicPlayerPreroll(_player);
+		MusicPlayerSetSequence(player, sequence);
+		MusicPlayerPreroll(player);
 	}
 	else {
 		if (self.isPlaying) {
@@ -117,15 +109,15 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 		}
 	}
 	
-	_sequenceLength = [self getSequenceLength:_sequence];
+	sequenceLength = [self getSequenceLength:sequence];
 	
-	MusicPlayerSetTime(_player, 0.0f);
+	MusicPlayerSetTime(player, 0.0f);
 	
-	if (MusicPlayerStart(_player) != noErr)
+	if (MusicPlayerStart(player) != noErr)
 		return NO;
 	
-	_checkTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(checkForEnd:)
-												 userInfo:nil repeats:YES];
+	checkTimer = [NSTimer scheduledTimerWithTimeInterval:0.1f target:self selector:@selector(checkForEnd:)
+												userInfo:nil repeats:YES];
 	 
 	return YES;
 }
@@ -134,10 +126,10 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 	if (!self.isPlaying)
 		return NO;
 	
-	[_checkTimer invalidate];
+	[checkTimer invalidate];
 	
 	[self willChangeValueForKey:@"isPlaying"];
-	MusicPlayerStop(_player);
+	MusicPlayerStop(player);
 	[self didChangeValueForKey:@"isPlaying"];
 	
 	return YES;
@@ -145,19 +137,16 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 
 - (BOOL)isPlaying {
 	Boolean playing = false;
-	MusicPlayerIsPlaying(_player, &playing);
+	MusicPlayerIsPlaying(player, &playing);
 	
 	return (BOOL) playing;
 }
 
-#pragma mark -
-#pragma mark Helpers
-
 - (void)checkForEnd:(NSTimer *)timer {
 	MusicTimeStamp time = 0.0f;
-	MusicPlayerGetTime(_player, &time);
+	MusicPlayerGetTime(player, &time);
 	
-	if (time > _sequenceLength) {
+	if (time > sequenceLength) {
 		[self stop];
 	}
 }
@@ -169,34 +158,32 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 	return (BOOL) hasNext;
 }
 
-- (MusicTimeStamp)getSequenceLength:(MusicSequence)sequence {
-    UInt32 tracks;
-    MusicTimeStamp sequenceLength = 0.0f;
+- (MusicTimeStamp)getSequenceLength:(MusicSequence)aSequence {
+	UInt32 tracks;
+	MusicTimeStamp len = 0.0f;
 	
-    if (MusicSequenceGetTrackCount(_sequence, &tracks) != noErr)
-		return sequenceLength;
+	if (MusicSequenceGetTrackCount(sequence, &tracks) != noErr)
+		return len;
 	
-    for (UInt32 i = 0; i < tracks; i++) {
-        MusicTrack track = NULL;
-        MusicTimeStamp trackLen = 0;
+	for (UInt32 i = 0; i < tracks; i++) {
+		MusicTrack track = NULL;
+		MusicTimeStamp trackLen = 0;
 		
-        UInt32 trackLenLen = sizeof(trackLen);
+		UInt32 trackLenLen = sizeof(trackLen);
 		
-        MusicSequenceGetIndTrack(_sequence, i, &track);
-        MusicTrackGetProperty(track, kSequenceTrackProperty_TrackLength, &trackLen, &trackLenLen);
+		MusicSequenceGetIndTrack(sequence, i, &track);
+		MusicTrackGetProperty(track, kSequenceTrackProperty_TrackLength, &trackLen, &trackLenLen);
 		
-        if (sequenceLength < trackLen)
-            sequenceLength = trackLen;
-    }
+		if (len < trackLen)
+			len = trackLen;
+	}
 	
-    return sequenceLength;
+	return len;
 }
 
-#pragma mark -
-
 - (void)finalize {
-	DisposeMusicPlayer(_player);
-	DisposeMusicSequence(_sequence);
+	DisposeMusicPlayer(player);
+	DisposeMusicSequence(sequence);
 	
 	[super finalize];
 }
