@@ -51,12 +51,12 @@ NSString *const MIDINoteTrackIndexKey = @"tk";
 }
 
 - (NSArray *)notes {
-	NSMutableArray *notes = [[NSMutableArray alloc] init];
-	
 	UInt32 tracksCount = 0;
 	
 	if (MusicSequenceGetTrackCount(sequence, &tracksCount) != noErr)
 		return nil;
+	
+	NSMutableArray *notes = [[NSMutableArray alloc] init];
 	
 	for (UInt32 i = 0; i < tracksCount; i++) {
 		MusicTrack track = NULL;
