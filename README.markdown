@@ -1,4 +1,4 @@
 MIDIVis
 =======
 
-A simple Core Animation application that visualizes MIDI files.
+A demo Core Animation application that visualizes MIDI files.
